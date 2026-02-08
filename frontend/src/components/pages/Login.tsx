@@ -1,8 +1,36 @@
 import { ArrowRight, Brain } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import type { FastAPIError, LoginData } from "@/lib/Types";
+import { useMutation } from "@tanstack/react-query";
+import { loginFunction } from "@/api/user";
+import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
+import { useAppContext } from "@/lib/AppProvider";
 
 const Login = () => {
+  const { setUser } = useAppContext();
+  const [data, setData] = useState<LoginData>({
+    email: "",
+    password: "",
+  });
+  const navigate = useNavigate();
+
+  const { mutate: login } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: () => loginFunction(data),
+    onSuccess: (response) => {
+      console.log("Login successful:", response);
+      setUser(response.user);
+      toast(response.message || "Login successful!");
+      navigate("/dashboard");
+    },
+    onError: (error: AxiosError<FastAPIError>) => {
+      toast(error.response?.data?.detail || "Login failed. Please try again.");
+    },
+  });
+
   return (
     <div className="w-screen h-screen flex items-center justify-center text-white bg-[#0F1117]">
       <div className="shadow rounded-lg px-20 py-10">
@@ -42,7 +70,13 @@ const Login = () => {
             </p>
           </div>
 
-          <form className="space-y-6">
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              login();
+            }}
+          >
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -56,6 +90,8 @@ const Login = () => {
                 placeholder="Enter User Email"
                 className="w-full bg-loom-surface border border-loom-border rounded-xl px-5 py-3 text-loom-text placeholder:text-loom-muted/30 focus:outline-none focus:border-loom-gold/50 focus:ring-1 focus:ring-loom-gold/50 transition-all"
                 autoFocus
+                value={data.email}
+                onChange={(e) => setData({ ...data, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -71,6 +107,8 @@ const Login = () => {
                 placeholder="Enter User Password"
                 className="w-full bg-loom-surface border border-loom-border rounded-xl px-5 py-3 text-loom-text placeholder:text-loom-muted/30 focus:outline-none focus:border-loom-gold/50 focus:ring-1 focus:ring-loom-gold/50 transition-all"
                 autoFocus
+                value={data.password}
+                onChange={(e) => setData({ ...data, password: e.target.value })}
               />
             </div>
 

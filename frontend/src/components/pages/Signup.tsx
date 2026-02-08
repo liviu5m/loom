@@ -1,6 +1,6 @@
 import { ArrowRight, Brain } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { FastAPIError, SignupData } from "@/lib/Types";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ const Signup = () => {
     password: "",
     passwordConfirmation: "",
   });
+  const navigate = useNavigate();
 
   const { mutate: signup } = useMutation({
     mutationKey: ["signup"],
@@ -22,6 +23,7 @@ const Signup = () => {
     onSuccess: (response) => {
       console.log("Signup successful:", response);
       toast(response.message || "Signup successful!");
+      navigate("/auth/login");
     },
     onError: (error: AxiosError<FastAPIError>) => {
       toast(error.response?.data?.detail || "Signup failed. Please try again.");

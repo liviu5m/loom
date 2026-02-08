@@ -15,3 +15,7 @@ class SignupData(BaseModel):
     email: str
     password: str
     passwordConfirmation: str
+
+class LoginData(BaseModel):
+    email: str
+    password: str
