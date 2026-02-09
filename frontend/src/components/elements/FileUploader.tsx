@@ -2,16 +2,17 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Upload, FileText, X, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { uploadFileFunc } from "@/api/storage";
+import { uploadMultipleFiles } from "@/api/storage";
 
 type FileUpload = {
   file: File;
-  uploaded: boolean;
+  status: string;
 };
 
 export function FileUploader() {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileUpload[]>([]);
+  const [fileUploadingId, setFileUploadingId] = useState<number | null>(null);
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -27,28 +28,34 @@ export function FileUploader() {
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const newFiles = Array.from(e.dataTransfer.files);
-      setFiles((prev) => [
-        ...prev,
-        ...newFiles.map((file) => ({ file, uploaded: false })),
-      ]);
+      // setFiles((prev) => [
+      //   ...prev,
+      //   ...newFiles.map((file) => ({ file, status: "waiting" })),
+      // ]);
+      console.log(newFiles);
+
+      uploadFiles(newFiles);
     }
   }, []);
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files).map((file) => ({
-        file,
-        uploaded: false,
-      }));
-      setFiles((prev) => [...prev, ...newFiles]);
+      // const newFiles = Array.from(e.target.files).map((file) => ({
+      //   file,
+      //   status: "waiting",
+      // }));
+      const newFiles = Array.from(e.target.files);
+      console.log(newFiles);
+      uploadFiles(newFiles);
+      // setFiles((prev) => [...prev, ...newFiles]);
     }
   };
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const { mutate: uploadFile } = useMutation({
+  const { mutate: uploadFiles } = useMutation({
     mutationKey: ["uploadFile"],
-    mutationFn: (file: File) => uploadFileFunc(file),
+    mutationFn: (file: File[]) => uploadMultipleFiles(file),
     onSuccess: (data) => {
       console.log(data);
     },
@@ -56,13 +63,6 @@ export function FileUploader() {
       console.log(err);
     },
   });
-
-  useEffect(() => {
-    console.log(files);
-    files.map((file: FileUpload) => {
-      uploadFile(file.file);
-    });
-  }, [files]);
 
   return (
     <div className="w-full space-y-6">
