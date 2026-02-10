@@ -2,15 +2,30 @@ import axios from "axios";
 
 const baseUrl = import.meta.env.VITE_API_URL;
 
-export async function uploadMultipleFiles(files: File[]) {
-  const uploadPromises = Array.from(files).map((file) => {
-    const formData = new FormData();
-    formData.append("files", file);
+type FileUpload = {
+  id: string;
+  file: File;
+  status: string;
+  pathname?: string;
+};
 
-    return axios.post(`${baseUrl}/storage/upload`, formData, {
-      withCredentials: true,
-    });
+export async function uploadMultipleFiles(files: FileUpload[]) {
+  const uploadPromises = files.map(async (fileItem) => {
+    const formData = new FormData();
+    formData.append("files", fileItem.file);
+
+    try {
+      const response = await axios.post(`${baseUrl}/storage/upload`, formData, {
+        withCredentials: true,
+      });
+
+      return { ...fileItem, filePath: response.data.filepath };
+    } catch (error) {
+      console.error("Upload failed for:", fileItem.file.name, error);
+      return { ...fileItem, status: "failed" };
+    }
   });
 
-  return Promise.all(uploadPromises);
+  const allUploadResults = await Promise.all(uploadPromises);
+  return allUploadResults;
 }

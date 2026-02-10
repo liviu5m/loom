@@ -30,8 +30,24 @@ async def upload_user_file(
             )
             results.append({"filename": file.filename, "path": file_path})
 
-        return {"status": "success", "uploads": results}
+        return {"status": "success", "filepath": file_path}
 
     except Exception as e:
         print(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/remove/{filename}")
+async def remove_user_file(
+    file_path: str,
+):
+    try:
+        response = supabase.storage.from_("user_docs").remove([file_path])
+
+        if not response:
+            raise HTTPException(status_code=404, detail="File not found or already deleted")
+
+        return {"status": "success", "message": f"Deleted {file_path}"}
+
+    except Exception as e:
+        print(f"Delete error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

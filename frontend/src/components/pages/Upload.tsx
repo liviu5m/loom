@@ -6,7 +6,7 @@ const Upload = () => {
 
   return (
     <BodyLayout>
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="p-8  w-[calc(100vw-320px)]">
         <div className="mb-8">
           <h1 className="text-3xl font-serif text-loom-text mb-2">
             Ingest Knowledge
@@ -16,7 +16,7 @@ const Upload = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="">
           <motion.div
             initial={{
               opacity: 0,

@@ -1,18 +1,39 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Upload, FileText, X, CheckCircle2 } from "lucide-react";
+import React, { useCallback, useId, useState } from "react";
+import { Upload, FileText, X, CheckIcon, OctagonX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { uploadMultipleFiles } from "@/api/storage";
 
 type FileUpload = {
+  id: string;
   file: File;
   status: string;
+  pathname?: string;
 };
+
+const allowedExtensions = [
+  ".py",
+  ".js",
+  ".ts",
+  ".yaml",
+  ".yml",
+  ".html",
+  ".css",
+  ".md",
+  ".json",
+];
+const allowedMimeTypes = [
+  "text/plain",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const MAX_SIZE = 10 * 1024 * 1024;
 
 export function FileUploader() {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileUpload[]>([]);
-  const [fileUploadingId, setFileUploadingId] = useState<number | null>(null);
+
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -22,42 +43,61 @@ export function FileUploader() {
       setIsDragging(false);
     }
   }, []);
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files);
-      // setFiles((prev) => [
-      //   ...prev,
-      //   ...newFiles.map((file) => ({ file, status: "waiting" })),
-      // ]);
-      console.log(newFiles);
-
+      const newFiles = filterFiles(Array.from(e.dataTransfer.files));
+      setFiles((prev) => [...prev, ...newFiles]);
       uploadFiles(newFiles);
     }
   }, []);
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      // const newFiles = Array.from(e.target.files).map((file) => ({
-      //   file,
-      //   status: "waiting",
-      // }));
-      const newFiles = Array.from(e.target.files);
-      console.log(newFiles);
+      const newFiles = filterFiles(Array.from(e.target.files));
+      setFiles((prev) => [...prev, ...newFiles]);
       uploadFiles(newFiles);
-      // setFiles((prev) => [...prev, ...newFiles]);
     }
   };
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const filterFiles = (files: File[]) => {
+    const filteredFiles = files.map((file) => {
+      const fileName = file.name.toLowerCase();
+
+      const isAllowedExtension = allowedExtensions.some((ext) => {
+        return fileName.endsWith(ext);
+      });
+      const isAllowedMime = allowedMimeTypes.includes(file.type);
+      const isUnderSizeLimit = file.size <= MAX_SIZE;
+
+      return (isAllowedExtension || isAllowedMime) && isUnderSizeLimit
+        ? { file, status: "waiting", id: crypto.randomUUID() }
+        : { file, status: "not-allowed", id: crypto.randomUUID() };
+    });
+    return filteredFiles;
+  };
+
   const { mutate: uploadFiles } = useMutation({
     mutationKey: ["uploadFile"],
-    mutationFn: (file: File[]) => uploadMultipleFiles(file),
+    mutationFn: (file: FileUpload[]) => uploadMultipleFiles(file),
     onSuccess: (data) => {
       console.log(data);
+      setFiles(
+        files.map((file) => {
+          if (
+            data.find((d: FileUpload) => d.id === file.id) &&
+            file.status == "waiting"
+          ) {
+            return { ...file, status: "uploaded" };
+          }
+          return file;
+        }),
+      );
     },
     onError: (err) => {
       console.log(err);
@@ -65,14 +105,14 @@ export function FileUploader() {
   });
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 flex gap-10">
       <div
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
         className={` px-20
-          relative w-full h-64 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
+          relative w-1/2 h-64 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
           ${isDragging ? "border-loom-gold bg-loom-gold/5 shadow-[0_0_30px_rgba(212,168,83,0.1)]" : "border-loom-border bg-loom-surface hover:border-loom-gold/30 hover:bg-loom-surface/80"}
         `}
       >
@@ -101,7 +141,6 @@ export function FileUploader() {
           </div>
         </div>
       </div>
-
       <AnimatePresence>
         {files.length > 0 && (
           <motion.div
@@ -117,9 +156,9 @@ export function FileUploader() {
               opacity: 0,
               height: 0,
             }}
-            className="space-y-3"
+            className="space-y-3 w-[500px]"
           >
-            <h3 className="text-sm font-medium text-loom-muted uppercase tracking-wider">
+            <h3 className="text-sm font-medium text-loom-muted uppercase tracking-wider w-full">
               Upload Queue
             </h3>
             <div className="space-y-2">
@@ -146,19 +185,34 @@ export function FileUploader() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-loom-text">
-                        {file.file.name}
+                        {file.file.name.substring(0, 20) +
+                          (file.file.name.length > 20 ? "..." : "")}
                       </p>
                       <p className="text-xs text-loom-muted">
                         {(file.file.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="p-1 hover:text-red-400 text-loom-muted transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center">
+                    <button className="p-1 hover:text-red-400 text-loom-muted transition-colors flex items-center justify-center">
+                      {file.status == "waiting" ? (
+                        <div className="w-5 h-5 border-4 border-t-loom-gold-dim border-gray-300 rounded-full animate-spin"></div>
+                      ) : file.status == "not-allowed" ? (
+                        <OctagonX className="w-4 h-4 text-red-500" />
+                      ) : (
+                        <CheckIcon className="w-4 h-4 text-green-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        
+                        removeFile(index)
+                      }}
+                      className="p-1 hover:text-red-400 text-loom-muted transition-colors cursor-pointer hover:scale-105"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </div>
