@@ -36,7 +36,7 @@ async def upload_user_file(
         print(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/remove/{filename}")
+@router.delete("/remove/{file_path:path}")
 async def remove_user_file(
     file_path: str,
 ):

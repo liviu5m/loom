@@ -2,13 +2,13 @@ import React, { useCallback, useId, useState } from "react";
 import { Upload, FileText, X, CheckIcon, OctagonX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { uploadMultipleFiles } from "@/api/storage";
+import { removeUploadedFile, uploadMultipleFiles } from "@/api/storage";
 
 type FileUpload = {
   id: string;
   file: File;
   status: string;
-  pathname?: string;
+  filePath?: string;
 };
 
 const allowedExtensions = [
@@ -89,15 +89,25 @@ export function FileUploader() {
       console.log(data);
       setFiles(
         files.map((file) => {
-          if (
-            data.find((d: FileUpload) => d.id === file.id) &&
-            file.status == "waiting"
-          ) {
-            return { ...file, status: "uploaded" };
+          let dataFound = data.find((d: FileUpload) => d.id === file.id);
+          if (dataFound && file.status == "waiting") {
+            return { ...dataFound, status: "uploaded" };
           }
           return file;
         }),
       );
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+  console.log(files);
+
+  const { mutate: deleteFile } = useMutation({
+    mutationKey: ["deleteFile"],
+    mutationFn: (filePath: string) => removeUploadedFile(filePath),
+    onSuccess: (data) => {
+      console.log(data);
     },
     onError: (err) => {
       console.log(err);
@@ -205,8 +215,8 @@ export function FileUploader() {
                     </button>
                     <button
                       onClick={() => {
-                        
-                        removeFile(index)
+                        deleteFile(file.filePath || "");
+                        removeFile(index);
                       }}
                       className="p-1 hover:text-red-400 text-loom-muted transition-colors cursor-pointer hover:scale-105"
                     >

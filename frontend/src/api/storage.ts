@@ -6,7 +6,7 @@ type FileUpload = {
   id: string;
   file: File;
   status: string;
-  pathname?: string;
+  filePath?: string;
 };
 
 export async function uploadMultipleFiles(files: FileUpload[]) {
@@ -28,4 +28,13 @@ export async function uploadMultipleFiles(files: FileUpload[]) {
 
   const allUploadResults = await Promise.all(uploadPromises);
   return allUploadResults;
+}
+
+export async function removeUploadedFile(filePath: string) {
+  console.log(filePath);
+
+  const response = await axios.delete(`${baseUrl}/storage/remove/${filePath}`, {
+    withCredentials: true,
+  });
+  return response.data;
 }
