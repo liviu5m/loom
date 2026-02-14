@@ -9,8 +9,10 @@ import { getUser } from "@/api/user";
 import Loader from "@/components/elements/Loader";
 
 interface AppContextType {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  user: User | null | Record<string, never>;
+  setUser: React.Dispatch<
+    React.SetStateAction<User | null | Record<string, never>>
+  >;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -20,9 +22,9 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null | Record<string, never>>(null);
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ["jwt-user"],
     queryFn: () => getUser(),
     retry: false,
@@ -30,8 +32,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
-    if (typeof data === "object") setUser(data);
-  }, [data]);
+    if (typeof data === "object" && !isError) setUser(data);
+    if (isError) setUser({});
+  }, [data, isError]);
 
   return isPending ? (
     <Loader />

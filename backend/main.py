@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from oauthlib.uri_validate import query
 
 from app.database import create_db_and_tables
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, storage
+from app.routes import auth, storage, document
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +36,12 @@ app.include_router(
     storage.router,
     prefix="/storage",
     tags=["Storage"]
+)
+
+app.include_router(
+    document.router,
+    prefix="/document",
+    tags=["Document"]
 )
 
 

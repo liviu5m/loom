@@ -65,11 +65,11 @@ def login(data: LoginData, response: Response):
         response.set_cookie(
             key="token",
             value=token,
-            httponly=True,   # Critical: prevents JS access
-            max_age=86400,   # 24 hours in seconds
-            expires=86400,
-            samesite="lax",  # Helps with CSRF
-            secure=False     # Set to True in production (HTTPS)
+            httponly=True,
+            max_age=86400,
+            samesite="lax",
+            secure=False,
+            path="/"
         )
         return {"user": user}
 
@@ -81,8 +81,9 @@ def get_me(user: User = Depends(get_current_user)):
 async def logout(response: Response):
     response.delete_cookie(
         key="token",
+        path="/",
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=False
     )
     return {"message": "Logged out successfully"}

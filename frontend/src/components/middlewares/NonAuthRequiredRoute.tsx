@@ -13,7 +13,7 @@ const NonAuthRequiredRoute: React.FC<NonAuthRequiredRouteProps> = ({
   const { user } = useAppContext();
   const location = useLocation();
 
-  if (user) {
+  if (user != null && user?.id) {
     return (
       <Navigate
         to="/dashboard"

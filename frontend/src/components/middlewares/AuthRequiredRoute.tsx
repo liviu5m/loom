@@ -11,7 +11,7 @@ const AuthRequiredRoute: React.FC<AuthRequiredRouteProps> = ({ children }) => {
   const { user } = useAppContext();
   const location = useLocation();
   
-  if (!user) {
+  if (user != null && !user?.id) {
     return (
       <Navigate
         to="/auth/login"

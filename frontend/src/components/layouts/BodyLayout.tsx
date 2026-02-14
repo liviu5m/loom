@@ -11,7 +11,7 @@ const BodyLayout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex bg-loom-dark text-loom-text min-h-screen">
       <div className="w-full min-h-screen flex">
         <Sidebar />
-        <main>{children}</main>
+        <main className="w-full">{children}</main>
       </div>
     </div>
   );
