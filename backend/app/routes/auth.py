@@ -23,7 +23,7 @@ async def get_current_user(token: str = Cookie(None)):
             raise HTTPException(status_code=401, detail="Not authenticated")
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            user_id: str = payload.get("sub")
+            user_id: str = payload.get("user_id")
             user = session.get(User, user_id)
             if user_id is None:
                 raise HTTPException(status_code=401, detail="Invalid token")
@@ -59,7 +59,7 @@ def login(data: LoginData, response: Response):
             raise HTTPException(status_code=400, detail="Invalid credentials")
 
         expire = datetime.now(timezone.utc) + timedelta(hours=24)
-        to_encode = {"sub": str(user.id), "exp": expire}
+        to_encode = {"user_id": str(user.id), "exp": expire}
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
         response.set_cookie(

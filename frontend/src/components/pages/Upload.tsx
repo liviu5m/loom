@@ -3,10 +3,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FileUploader } from "../elements/FileUploader";
 
 const Upload = () => {
-
   return (
     <BodyLayout>
-      <div className="p-8  w-[calc(100vw-320px)]">
+      <div className="p-8 w-[calc(100vw-320px)]">
         <div className="mb-8">
           <h1 className="text-3xl font-serif text-loom-text mb-2">
             Ingest Knowledge
@@ -15,7 +14,6 @@ const Upload = () => {
             Upload documents to expand your external brain's context.
           </p>
         </div>
-
         <div className="">
           <motion.div
             initial={{
@@ -31,7 +29,6 @@ const Upload = () => {
             }}
           >
             <FileUploader />
-
             <div className="mt-8 p-4 rounded-lg bg-loom-surface/50 border border-loom-border text-sm text-loom-muted">
               <h4 className="font-medium text-loom-text mb-2">
                 Supported Formats

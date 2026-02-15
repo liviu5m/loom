@@ -33,6 +33,7 @@ const MAX_SIZE = 10 * 1024 * 1024;
 export function FileUploader() {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileUpload[]>([]);
+  const [chunckSize, setChunkSize] = useState(1000);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -84,7 +85,7 @@ export function FileUploader() {
 
   const { mutate: uploadFiles } = useMutation({
     mutationKey: ["uploadFile"],
-    mutationFn: (file: FileUpload[]) => uploadMultipleFiles(file),
+    mutationFn: (file: FileUpload[]) => uploadMultipleFiles(file, chunckSize),
     onSuccess: (data) => {
       console.log(data);
       setFiles(
@@ -116,41 +117,69 @@ export function FileUploader() {
 
   return (
     <div className="w-full space-y-6 flex gap-10">
-      <div
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-        className={` px-20
-          relative w-1/2 h-64 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
+      <div className="w-1/2">
+        <div
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          className={` px-20
+          relative w-full h-64 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
           ${isDragging ? "border-loom-gold bg-loom-gold/5 shadow-[0_0_30px_rgba(212,168,83,0.1)]" : "border-loom-border bg-loom-surface hover:border-loom-gold/30 hover:bg-loom-surface/80"}
         `}
-      >
-        <input
-          type="file"
-          multiple
-          onChange={handleFileInput}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-          accept=".pdf,.txt,.md"
-        />
+        >
+          <input
+            type="file"
+            multiple
+            onChange={handleFileInput}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            accept=".pdf,.txt,.md"
+          />
 
-        <div className="flex flex-col items-center space-y-4 text-center pointer-events-none">
-          <div
-            className={`
+          <div className="flex flex-col items-center space-y-4 text-center pointer-events-none">
+            <div
+              className={`
             p-4 rounded-full transition-all duration-300
             ${isDragging ? "bg-loom-gold/20 text-loom-gold" : "bg-loom-dark border border-loom-border text-loom-muted"}
           `}
-          >
-            <Upload className="w-8 h-8" />
+            >
+              <Upload className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-medium text-loom-text">
+                Drop your documents here
+              </p>
+              <p className="text-sm text-loom-muted">
+                Support for PDF, TXT, MD
+              </p>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-lg font-medium text-loom-text">
-              Drop your documents here
-            </p>
-            <p className="text-sm text-loom-muted">Support for PDF, TXT, MD</p>
+        </div>
+        <div className="mt-5">
+          <h2 className="font-semibold">Document Usage: </h2>
+          <div className="flex items-center gap-5 mt-5">
+            <button
+              className={`px-5 py-3 cursor-pointer rounded-lg bg-loom-surface border border-loom-border text-sm font-semibold ${chunckSize === 1000 ? "border-loom-gold text-loom-gold" : "text-loom-muted hover:border-loom-gold/30 hover:text-loom-gold/80"}`}
+              onClick={() => setChunkSize(1000)}
+            >
+              Regular
+            </button>
+            <button
+              className={`px-5 py-3 cursor-pointer rounded-lg bg-loom-surface border border-loom-border text-sm font-semibold ${chunckSize === 3000 ? "border-loom-gold text-loom-gold" : "text-loom-muted hover:border-loom-gold/30 hover:text-loom-gold/80"}`}
+              onClick={() => setChunkSize(3000)}
+            >
+              Detailed
+            </button>
+            <button
+              className={`px-5 py-3 cursor-pointer rounded-lg bg-loom-surface border border-loom-border text-sm font-semibold ${chunckSize === 5000 ? "border-loom-gold text-loom-gold" : "text-loom-muted hover:border-loom-gold/30 hover:text-loom-gold/80"}`}
+              onClick={() => setChunkSize(5000)}
+            >
+              Insightful
+            </button>
           </div>
         </div>
       </div>
+
       <AnimatePresence>
         {files.length > 0 && (
           <motion.div

@@ -16,14 +16,19 @@ def search_user_documents_func(
     result = search_user_documents(user.id, query)
     content_list = [
         {
-            "content": res.content,
-            "page": res.page,
-            "filename": res.filename,
-            "file_path": res.file_path
+            "content": res["document"].content,
+            "page": res["document"].page,
+            "filename": res["document"].filename,
+            "file_path": res["document"].file_path,
+            "match_score": res["match_score"]
         }
         for res in result
     ]
-    return ask_rag_question(content_list, query)
+    result = {
+        "answer": ask_rag_question(content_list, query),
+        "content_list": content_list,
+    }
+    return result
 
 def save_documents(
     docs: list[Document]

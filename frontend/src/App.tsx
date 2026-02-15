@@ -11,6 +11,7 @@ import { AppProvider } from "./lib/AppProvider";
 import NonAuthRequiredRoute from "./components/middlewares/NonAuthRequiredRoute";
 import AuthRequiredRoute from "./components/middlewares/AuthRequiredRoute";
 import Query from "./components/pages/Query";
+import Library from "./components/pages/Library";
 
 function App() {
   const queryClient = new QueryClient();
@@ -38,7 +39,7 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/upload" element={<Upload />} />
                     <Route path="/query" element={<Query />} />
-                    <Route path="/library" element={<Dashboard />} />
+                    <Route path="/library" element={<Library />} />
                   </Routes>
                 </AuthRequiredRoute>
               }

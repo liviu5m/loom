@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form
 from app.rag import saveFileToDB
 from app.routes.auth import get_current_user
 from app.models import User
@@ -7,11 +7,14 @@ from app.routes.document import remove_user_documents
 import uuid
 import os
 
+from app.routes.file import delete_file
+
 router = APIRouter()
 
 @router.post("/upload")
 async def upload_user_file(
     files: list[UploadFile] = File(...),
+    chunk_size: int = Form(...),
     user: User = Depends(get_current_user)
 ):
     try:
@@ -21,9 +24,8 @@ async def upload_user_file(
             file_content = await file.read()
             extension = os.path.splitext(file.filename)[1]
 
-
             random_id = str(uuid.uuid4())
-            _, ext = os.path.splitext(file.filename)
+            filename, ext = os.path.splitext(file.filename)
             unique_filename = f"{random_id}{ext}"
             file_path = f"{user.id}/{unique_filename}"
 
@@ -32,7 +34,7 @@ async def upload_user_file(
                 file=file_content,
                 file_options={"content-type": file.content_type}
             )
-            saveFileToDB(file_content, extension, user.id, file_path, file.filename)
+            saveFileToDB(file_content, extension, user.id, file_path, file.filename, chunk_size)
             results.append({"filename": file.filename, "path": file_path})
 
         return {"status": "success", "filepath": file_path}
@@ -51,8 +53,14 @@ async def remove_user_file(
         if not response:
             raise HTTPException(status_code=404, detail="File not found or already deleted")
         remove_user_documents(file_path)
+        delete_file(file_path)
         return {"status": "success", "message": f"Deleted {file_path}"}
 
     except Exception as e:
         print(f"Delete error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/files")
+async def get_files(search: str, user = Depends(get_current_user)):
+    response = supabase.storage.from_("user_docs").list(path=f"{user.id}/")
+

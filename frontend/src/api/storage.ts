@@ -9,11 +9,16 @@ type FileUpload = {
   filePath?: string;
 };
 
-export async function uploadMultipleFiles(files: FileUpload[]) {
+export async function uploadMultipleFiles(
+  files: FileUpload[],
+  chunkSize: number,
+) {
   const uploadPromises = files.map(async (fileItem) => {
     const formData = new FormData();
     formData.append("files", fileItem.file);
-
+    formData.append("chunk_size", chunkSize.toString());
+    console.log(chunkSize);
+      
     try {
       const response = await axios.post(`${baseUrl}/storage/upload`, formData, {
         withCredentials: true,
@@ -31,10 +36,18 @@ export async function uploadMultipleFiles(files: FileUpload[]) {
 }
 
 export async function removeUploadedFile(filePath: string) {
-  console.log(filePath);
-
   const response = await axios.delete(`${baseUrl}/storage/remove/${filePath}`, {
     withCredentials: true,
+  });
+  return response.data;
+}
+
+export async function getFilesStorage(search: string) {
+  const response = await axios.get(`${baseUrl}/storage/files`, {
+    withCredentials: true,
+    params: {
+      search,
+    },
   });
   return response.data;
 }
