@@ -7,6 +7,7 @@ import type { QueryResponse } from "@/lib/Types";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
+import { createResponseFunc } from "@/api/response";
 
 const Query = () => {
   const [query, setQuery] = useState("");
@@ -17,12 +18,30 @@ const Query = () => {
     "How do I authenticate with the API ? ",
   ];
 
+  const { mutate: createResponse } = useMutation({
+    mutationKey: ["create-response"],
+    mutationFn: ({
+      question,
+      response,
+    }: {
+      question: string;
+      response: string;
+    }) => createResponseFunc(question, response),
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+
   const { mutate: searchQuery, isPending } = useMutation({
     mutationKey: ["search-query", query],
     mutationFn: () => submitQuery(query),
     onSuccess: (data) => {
       console.log(data);
       setResponse(data);
+      createResponse({ question: query, response: data.answer });
     },
     onError: (err) => {
       console.log(err);

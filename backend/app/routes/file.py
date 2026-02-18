@@ -16,6 +16,14 @@ def search_files(search: str, user: User = Depends(get_current_user)):
         results = session.exec(statement).all()
         return results
 
+@router.delete("/{file_id}")
+def search_files(file_id: int):
+    with Session(engine) as session:
+        stmt = delete(File).where(File.id == file_id)
+        result = session.execute(stmt)
+        session.commit()
+        return "File deleted"
+
 
 def save_file(file_path, filename, chunks, user_id):
     with Session(engine) as session:

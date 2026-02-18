@@ -1,7 +1,15 @@
-import { Calendar, Database, FileCheck, Icon, Search } from "lucide-react";
+import {
+  Calendar,
+  Database,
+  FileCheck,
+  Icon,
+  Search,
+  X,
+  XIcon,
+} from "lucide-react";
 import BodyLayout from "../layouts/BodyLayout";
-import { useQuery } from "@tanstack/react-query";
-import { searchFiles } from "@/api/file";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteFileFunc, searchFiles } from "@/api/file";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import type { File } from "@/lib/Types";
@@ -9,20 +17,31 @@ import Loader from "../elements/Loader";
 
 const Library = () => {
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: files, isPending } = useQuery({
     queryKey: ["files", search],
     queryFn: () => searchFiles(search),
   });
 
-  console.log(files);
+  const { mutate: deleteFile } = useMutation({
+    mutationKey: ["deleteFile"],
+    mutationFn: (fileId: number) => deleteFileFunc(fileId),
+    onSuccess: (data) => {
+      console.log(data);
+      queryClient.invalidateQueries({ queryKey: ["files", search] });
+    },
+    onError: (error) => {
+      console.error("Error deleting file:", error);
+    },
+  });
 
   return isPending ? (
     <Loader />
   ) : (
     <BodyLayout>
       <div className="flex items-center justify-center">
-        <div className="w-[1000px] py-10">
+        <div className="w-[1200px] py-10">
           <div className="flex justify-between">
             <div>
               <h1 className="text-2xl font-sans text-loom-text">Library</h1>
@@ -43,6 +62,11 @@ const Library = () => {
               </div>
             </div>
           </div>
+          {files.length == 0 && (
+            <p className="text-loom-muted text-xl text-center mt-10">
+              No files found
+            </p>
+          )}
           <div className="mt-6 grid grid-cols-3 gap-4">
             {files.map((file: File, i: number) => {
               return (
@@ -67,7 +91,10 @@ const Library = () => {
                   className="bg-loom-surface border border-loom-border rounded-xl p-5 cursor-pointer group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-2 h-2 rounded-full bg-loom-gold shadow-[0_0_8px_rgba(212,168,83,0.6)]" />
+                    <XIcon
+                      className="w-5 h-5 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:scale-110"
+                      onClick={() => deleteFile(file.id)}
+                    />
                   </div>
 
                   <div className="flex items-start gap-4 mb-4">
@@ -90,7 +117,9 @@ const Library = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs text-loom-muted border-t border-loom-border pt-4">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(file.created_at).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(file.created_at).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 justify-end">
                       <Database className="w-3.5 h-3.5" />

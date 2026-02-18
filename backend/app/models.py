@@ -16,6 +16,7 @@ class User(SQLModel, table=True):
     password: str
     documents: List["Document"] = Relationship(back_populates="user")
     files: List["File"] = Relationship(back_populates="user")
+    responses: List["Response"] = Relationship(back_populates="user")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False
@@ -46,6 +47,19 @@ class File(SQLModel, table=True):
     chunks: int
     user_id: int = Field(foreign_key="loom.users.id")
     user: Optional[User] = Relationship(back_populates="files")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+class Response(SQLModel, table=True):
+    __table_args__ = {"schema": "loom"}
+    __tablename__ = "responses"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    question: str
+    response: str
+    user_id: int = Field(foreign_key="loom.users.id")
+    user: Optional[User] = Relationship(back_populates="responses")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False

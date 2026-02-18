@@ -4,7 +4,7 @@ from oauthlib.uri_validate import query
 
 from app.database import create_db_and_tables
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, storage, document, file
+from app.routes import auth, storage, document, file, response
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,6 +48,13 @@ app.include_router(
     file.router,
     prefix="/file",
     tags=["File"]
+)
+
+
+app.include_router(
+    response.router,
+    prefix="/response",
+    tags=["Response"]
 )
 
 
