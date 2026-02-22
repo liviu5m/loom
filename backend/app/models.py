@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column
+from sqlalchemy import Column, DateTime,func
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, Any, List, Dict
 from pydantic import BaseModel
@@ -19,7 +19,10 @@ class User(SQLModel, table=True):
     responses: List["Response"] = Relationship(back_populates="user")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
+        sa_column_kwargs={
+            "server_default": func.now(),  # This handles the DB side
+            "nullable": False
+        }
     )
 
 class Document(SQLModel, table=True):
@@ -35,7 +38,10 @@ class Document(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="documents")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
+        sa_column_kwargs={
+            "server_default": func.now(),  # This handles the DB side
+            "nullable": False
+        }
     )
 
 class File(SQLModel, table=True):
@@ -49,7 +55,10 @@ class File(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="files")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
+        sa_column_kwargs={
+            "server_default": func.now(),  # This handles the DB side
+            "nullable": False
+        }
     )
 
 class Response(SQLModel, table=True):
@@ -62,7 +71,10 @@ class Response(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="responses")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
+        sa_column_kwargs={
+            "server_default": func.now(),  # This handles the DB side
+            "nullable": False
+        }
     )
 
 class SignupData(BaseModel):

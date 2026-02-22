@@ -9,3 +9,10 @@ export async function createResponseFunc(question: string, response: string) {
   });
   return responseObj.data;
 }
+
+export async function getResponses() {
+  const responseObj = await axios.get(`${baseUrl}/response/`, {
+    withCredentials: true,
+  });
+  return responseObj.data;
+}

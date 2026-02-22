@@ -4,6 +4,7 @@ from sqlmodel import Session
 from app.database import engine
 from app.models import Response, User
 from app.routes.auth import get_current_user
+from sqlalchemy import select
 
 router = APIRouter()
 
@@ -20,3 +21,10 @@ def create_response(data: ResponseData, user: User = Depends(get_current_user)):
         session.commit()
         session.refresh(response)
         return "Response created successfully"
+
+@router.get("/")
+def create_response(user: User = Depends(get_current_user)):
+    with Session(engine) as session:
+        statement = select(Response).where(Response.user_id == user.id)
+        results = session.exec(statement).scalars().all()
+        return results

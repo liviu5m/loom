@@ -39,3 +39,11 @@ export type File = {
   chunks: string;
   created_at: number;
 }
+
+export type Response = {
+  id: number;
+  question: string;
+  response: string;
+  created_at: string;
+  user_id: number;
+}
