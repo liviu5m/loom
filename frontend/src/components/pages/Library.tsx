@@ -14,14 +14,17 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import type { File } from "@/lib/Types";
 import Loader from "../elements/Loader";
+import Pagination from "../elements/Pagination";
 
 const Library = () => {
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const pageSize = 1;
 
   const { data: files, isPending } = useQuery({
-    queryKey: ["files", search],
-    queryFn: () => searchFiles(search),
+    queryKey: ["files", search, page],
+    queryFn: () => searchFiles(search, page, pageSize),
   });
 
   const { mutate: deleteFile } = useMutation({
@@ -35,6 +38,8 @@ const Library = () => {
       console.error("Error deleting file:", error);
     },
   });
+
+  console.log(files);
 
   return isPending ? (
     <Loader />
@@ -62,13 +67,13 @@ const Library = () => {
               </div>
             </div>
           </div>
-          {files.length == 0 && (
+          {files.items.length == 0 && (
             <p className="text-loom-muted text-xl text-center mt-10">
               No files found
             </p>
           )}
           <div className="mt-6 grid grid-cols-3 gap-4">
-            {files.map((file: File, i: number) => {
+            {files.items.map((file: File, i: number) => {
               return (
                 <motion.div
                   key={i}
@@ -130,6 +135,12 @@ const Library = () => {
               );
             })}
           </div>
+          <Pagination
+            items={files.total}
+            pageSize={pageSize}
+            currentPage={page}
+            onPageChange={setPage}
+          />
         </div>
       </div>
     </BodyLayout>

@@ -5,16 +5,16 @@ from app.models import File, User
 from sqlalchemy import delete
 from app.routes.auth import get_current_user
 from app.database import engine
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlmodel import paginate
 
 router = APIRouter()
 
-@router.get("/")
-def search_files(search: str, user: User = Depends(get_current_user)):
+@router.get("/",response_model=Page[File])
+def search_files(search: str,params: Params = Depends(), user: User = Depends(get_current_user)):
     with Session(engine) as session:
         statement = select(File).where(File.filename.ilike(f"%{search}%"), File.user_id == user.id)
-        result = session.execute(statement)
-        results = session.exec(statement).all()
-        return results
+        return paginate(session, statement, params)
 
 @router.delete("/{file_id}")
 def search_files(file_id: int):
@@ -38,3 +38,4 @@ def delete_file(file_path):
         result = session.execute(stmt)
         session.commit()
     return "File saved"
+
